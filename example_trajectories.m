@@ -85,3 +85,41 @@ save("results\voronoi_low_trajectory", "X", "limits", "params", "F", "V", "a")
 
 % TR = triangulation(F, V);
 % stlwrite(TR, stlFile);
+
+% Example other scaffold
+clearvars
+addpath(genpath('./'))
+
+params_reference
+params.scaffold = 'parallel_fibres';
+
+
+[stlStruct,stlName] = stlread(params.scaffold + ".stl");
+V = stlStruct.Points;
+F = stlStruct.ConnectivityList;
+
+limits={};
+limits.xmax = max(V(:,1)) + params.xmaxeff;
+limits.xmin = min(V(:,1)) - params.xmineff;
+limits.ymax = max(V(:,2));
+limits.ymin = min(V(:,2));
+limits.zmax = max(V(:,3));
+limits.zmin = min(V(:,3));
+
+initials = [limits.xmin + params.r 
+    (limits.ymax + limits.ymin) / 2 
+    (limits.zmax + limits.zmin) / 2 ];
+
+params.N_cells = 10;
+params.T_macro = 50;
+params.deltat_save = params.deltat*10;
+
+[centres, normals] = triangles_to_centres(F,V);
+tic
+[X, t_exit] = movement_scaffold(params, limits, centres, normals, initials);
+toc
+
+figure
+plot_trajectories(X, limits, params, F, V)
+
+save("results\"+string(params.scaffold)+"trajectories", "X", "limits", "params", "F", "V")
